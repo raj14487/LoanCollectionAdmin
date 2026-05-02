@@ -22,7 +22,10 @@ html {
   font-family: inherit;
   width: 100%;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
   box-sizing: border-box;
 }
 
@@ -57,7 +60,10 @@ html {
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(212, 160, 23, 0.35);
-  transition: box-shadow 0.2s, transform 0.15s, opacity 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.15s,
+    opacity 0.2s;
   font-family: inherit;
 }
 
@@ -92,7 +98,10 @@ html {
   font-weight: 400;
   font-family: inherit;
   text-align: left;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .sidebar-nav-item:hover {
@@ -109,7 +118,9 @@ html {
 
 /* Dashboard stat cards */
 .stat-card {
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .stat-card:hover {
