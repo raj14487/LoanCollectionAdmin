@@ -14,7 +14,7 @@ import {
   RiInformationLine,
 } from "react-icons/ri";
 import { apiFetch } from "../config/api";
-import { useAuth } from "../hooks/useAuth";
+import { usePermission } from "../hooks/usePermission";
 import { toaster } from "../components/ui/toaster";
 
 const ACCENT = "#8b5cf6";
@@ -647,8 +647,8 @@ function DetailPanel({
 // â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Approvals() {
-  const { user } = useAuth();
-  const canAction = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
+  const { can } = usePermission();
+  const canAction = can("approvals:approve");
 
   const [approvals, setApprovals] = useState([]);
   const [loading, setLoading] = useState(true);

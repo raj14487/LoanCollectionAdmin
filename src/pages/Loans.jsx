@@ -16,7 +16,7 @@ import {
   RiArrowDownLine,
 } from "react-icons/ri";
 import { apiFetch } from "../config/api";
-import { useAuth } from "../hooks/useAuth";
+import { usePermission } from "../hooks/usePermission";
 import { toaster } from "../components/ui/toaster";
 
 const STATUS = {
@@ -317,7 +317,8 @@ function DetailPanel({
   onApproveSettle,
   onDelete,
   actionLoading,
-  isSuperAdmin,
+  canApproveSettle,
+  canDelete,
 }) {
   const paid = Number(loan.loanAmount) - Number(loan.outstandingAmount);
   const pct =
@@ -569,7 +570,7 @@ function DetailPanel({
             flexShrink: 0,
           }}
         >
-          {!isSuperAdmin && (
+          {!canApproveSettle && (
             <button
               onClick={() => onSettle(loan.id)}
               disabled={actionLoading}
@@ -601,7 +602,7 @@ function DetailPanel({
               )}
             </button>
           )}
-          {isSuperAdmin && (
+          {canApproveSettle && (
             <button
               onClick={() => onApproveSettle(loan.id)}
               disabled={actionLoading}
@@ -634,7 +635,7 @@ function DetailPanel({
               )}
             </button>
           )}
-          {isSuperAdmin && (
+          {canDelete && (
             <button
               onClick={() => onDelete(loan.id)}
               disabled={actionLoading}
@@ -1020,8 +1021,7 @@ function CreateLoanModal({ onClose, onCreated }) {
 // â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Loans() {
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const { can } = usePermission();
 
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1440,7 +1440,8 @@ export default function Loans() {
             onApproveSettle={handleApproveSettle}
             onDelete={handleDelete}
             actionLoading={actionLoading}
-            isSuperAdmin={isSuperAdmin}
+            canApproveSettle={can("loans:approveSettlement")}
+            canDelete={can("loans:delete")}
           />
         )}
       </AnimatePresence>

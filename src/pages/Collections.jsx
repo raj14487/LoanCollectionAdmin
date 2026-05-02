@@ -13,7 +13,7 @@ import {
   RiFileTextLine,
 } from "react-icons/ri";
 import { apiFetch } from "../config/api";
-import { useAuth } from "../hooks/useAuth";
+import { usePermission } from "../hooks/usePermission";
 import { toaster } from "../components/ui/toaster";
 
 const FILTERS = ["ALL", "PENDING", "VERIFIED"];
@@ -249,7 +249,7 @@ function DetailPanel({
   onVerify,
   onDelete,
   actionLoading,
-  isSuperAdmin,
+  canDelete,
 }) {
   const verified = isVerified(collection);
   return (
@@ -403,7 +403,7 @@ function DetailPanel({
       </div>
 
       {/* Footer */}
-      {(!verified || isSuperAdmin) && (
+      {(!verified || canDelete) && (
         <div
           style={{
             padding: "14px 22px",
@@ -447,7 +447,7 @@ function DetailPanel({
               )}
             </button>
           )}
-          {isSuperAdmin && (
+          {canDelete && (
             <button
               onClick={() => onDelete(collection.id)}
               disabled={actionLoading}
@@ -488,8 +488,7 @@ function DetailPanel({
 // â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Collections() {
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const { can } = usePermission();
 
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -799,7 +798,7 @@ export default function Collections() {
             onVerify={handleVerify}
             onDelete={handleDelete}
             actionLoading={actionLoading}
-            isSuperAdmin={isSuperAdmin}
+            canDelete={can("collections:delete")}
           />
         )}
       </AnimatePresence>

@@ -17,7 +17,7 @@ import {
   RiUserStarLine,
 } from "react-icons/ri";
 import { apiFetch } from "../config/api";
-import { useAuth } from "../hooks/useAuth";
+import { usePermission } from "../hooks/usePermission";
 import { toaster } from "../components/ui/toaster";
 
 // Derive a display status from the cashier record
@@ -595,8 +595,7 @@ function DetailPanel({
 }
 
 export default function Cashiers() {
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const { can } = usePermission();
 
   const [cashiers, setCashiers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -922,7 +921,7 @@ export default function Cashiers() {
             onApprove={handleApprove}
             onDelete={handleDelete}
             actionLoading={actionLoading}
-            canApprove={isSuperAdmin}
+            canApprove={can("cashiers:approve")}
           />
         )}
       </AnimatePresence>
