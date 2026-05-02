@@ -108,7 +108,6 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line
     refreshData();
   }, [refreshData]);
 
