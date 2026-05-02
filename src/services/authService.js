@@ -1,52 +1,38 @@
-// services/authService.js
 import { API_BASE_URL } from "../config/api";
 
-export const login = async credentials => {
+export const login = async ({ mobileOrEmail, password }) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/users?username=${credentials.username}&password=${credentials.password}`
-    );
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: mobileOrEmail, password }),
+    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { success: false, message: err.message || "Invalid credentials" };
     }
 
-    const users = await response.json();
+    const data = await res.json();
 
-    if (users && users.length > 0) {
-      const user = users[0];
-
-      // Only allow login for Admin or Manager roles
-      if (user.role !== "Admin" && user.role !== "Manager") {
-        return {
-          message: "Access denied. Only Admin or Manager can log in.",
-          success: false,
-        };
-      }
-
-      // Return successful login response
+    if (data.role === "CASHIER") {
       return {
-        message: "Login successful",
-        success: true,
-        user: {
-          id: user.id,
-          name: user.name,
-          username: user.username,
-          role: user.role, // Include role in user object
-        },
-      };
-    } else {
-      // Return failure response
-      return {
-        message: "Invalid username or password",
         success: false,
+        message:
+          "Cashiers use the mobile app. Admin panel is for Super Admin and Admin only.",
       };
     }
-  } catch (error) {
-    console.error("Login error:", error);
+
     return {
-      message: "Network error. Please try again.",
-      success: false,
+      success: true,
+      user: {
+        id: data.userId,
+        name: data.name,
+        role: data.role,
+        token: data.token,
+      },
     };
+  } catch {
+    return { success: false, message: "Network error. Please try again." };
   }
 };

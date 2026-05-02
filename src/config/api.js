@@ -1,14 +1,24 @@
-// config/api.js
-// Default API URL for development
-let API_BASE_URL = "http://0.0.0.0:3000";
+export const API_BASE_URL =
+  (typeof window !== "undefined" && window._env_?.REACT_APP_API_URL) ||
+  "https://loancollectionmanagement-production.up.railway.app";
 
-// Check if a runtime config exists (injected by Docker container at startup)
-if (
-  typeof window !== "undefined" &&
-  window._env_ &&
-  window._env_.REACT_APP_API_URL
-) {
-  API_BASE_URL = window._env_.REACT_APP_API_URL;
-}
+export const getToken = () => localStorage.getItem("auth_token");
 
-export { API_BASE_URL };
+export const apiFetch = async (path, options = {}) => {
+  const token = getToken();
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+  if (res.status === 401) throw new Error("Unauthorized");
+  if (res.status === 204) return null;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Request failed (${res.status})`);
+  }
+  return res.json();
+};

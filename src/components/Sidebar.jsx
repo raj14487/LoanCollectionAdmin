@@ -1,170 +1,173 @@
-import {
-  Button,
-  CloseButton,
-  Drawer,
-  Portal,
-  IconButton,
-  VStack,
-  Flex,
-  Separator,
-} from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Box, Text, Flex } from "@chakra-ui/react";
 import { useAuth } from "../hooks/useAuth";
 import {
-  RiHome7Line,
-  RiUserAddLine,
-  RiHeartPulseLine,
+  RiDashboard3Line,
+  RiGroupLine,
+  RiUserLine,
+  RiMoneyDollarBoxLine,
+  RiHandCoinLine,
+  RiSafeLine,
+  RiCheckboxCircleLine,
+  RiBarChart2Line,
+  RiBellLine,
   RiLogoutBoxLine,
-  RiMenuLine,
-  RiUserShared2Line,
-  RiFileListLine,
-  RiAdminFill,
+  RiBankLine,
 } from "react-icons/ri";
 
-const Sidebar = ({ isOpen, onClose }) => {
+const NAV_ITEMS = [
+  { icon: RiDashboard3Line, label: "Dashboard", to: "/home" },
+  { icon: RiGroupLine, label: "Customers", to: "/customers" },
+  { icon: RiUserLine, label: "Cashiers", to: "/cashiers" },
+  { icon: RiMoneyDollarBoxLine, label: "Loans", to: "/loans" },
+  { icon: RiHandCoinLine, label: "Collections", to: "/collections" },
+  { icon: RiSafeLine, label: "Cash Box", to: "/cash-box" },
+  { icon: RiCheckboxCircleLine, label: "Approvals", to: "/approvals" },
+  { icon: RiBarChart2Line, label: "Reports", to: "/reports" },
+  { icon: RiBellLine, label: "Notifications", to: "/notifications" },
+];
+
+function NavItem({ icon: Icon, label, to }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const location = useLocation();
+  const isActive = location.pathname === to;
 
   return (
-    <Drawer.Root open={isOpen} onOpenChange={onClose} placement="start">
-      <Drawer.Trigger asChild>
-        <IconButton
-          variant="surface"
-          position="fixed"
-          left="1rem"
-          top="6rem"
-          zIndex="999"
-          aria-label="Open menu"
-          colorPalette="gray"
-          size="2xl"
-        >
-          <RiMenuLine />
-        </IconButton>
-      </Drawer.Trigger>
-      <Portal>
-        <Drawer.Backdrop />
-        <Drawer.Positioner>
-          <Drawer.Content width="250px">
-            <Drawer.Header>
-              <Drawer.Title>Sales Rep Admin</Drawer.Title>
-              <Drawer.CloseTrigger asChild>
-                <CloseButton position="absolute" top="4" right="4" />
-              </Drawer.CloseTrigger>
-            </Drawer.Header>
-            <Drawer.Body py={4}>
-              <VStack spacing={1} align="stretch">
-                <Button
-                  variant="ghost"
-                  colorScheme="gray"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate("/home");
-                    onClose();
-                  }}
-                  size="lg"
-                >
-                  <RiHome7Line />
-                  Dashboard
-                </Button>
-                <Separator />
-
-                <Button
-                  variant="ghost"
-                  colorScheme="gray"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate("/onboard-sales-rep");
-                    onClose();
-                  }}
-                  size="lg"
-                >
-                  <RiUserAddLine />
-                  Onboard Sales Rep
-                </Button>
-                <Separator />
-
-                <Button
-                  variant="ghost"
-                  colorScheme="gray"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate("/add-doctor");
-                    onClose();
-                  }}
-                  size="lg"
-                >
-                  <RiHeartPulseLine />
-                  Add Doctor
-                </Button>
-                <Separator />
-
-                <Button
-                  variant="ghost"
-                  colorScheme="gray"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate("/assign-doctor");
-                    onClose();
-                  }}
-                  size="lg"
-                >
-                  <RiUserShared2Line />
-                  Assign Doctor
-                </Button>
-                <Separator />
-
-                <Button
-                  variant="ghost"
-                  colorScheme="gray"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate("/audit");
-                    onClose();
-                  }}
-                  size="lg"
-                >
-                  <RiFileListLine />
-                  Audit Logs
-                </Button>
-                <Separator />
-
-                <Button
-                  variant="ghost"
-                  colorScheme="gray"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate("/assignments");
-                    onClose();
-                  }}
-                  size="lg"
-                >
-                  <RiAdminFill />
-                  Assignment Management
-                </Button>
-                <Separator />
-
-                <Flex mt="auto" pt="4">
-                  <Button
-                    colorPalette="red"
-                    justifyContent="flex-start"
-                    onClick={() => {
-                      logout();
-                      navigate("/");
-                    }}
-                    flex={1}
-                    size="lg"
-                  >
-                    <RiLogoutBoxLine />
-                    Logout
-                  </Button>
-                </Flex>
-              </VStack>
-            </Drawer.Body>
-          </Drawer.Content>
-        </Drawer.Positioner>
-      </Portal>
-    </Drawer.Root>
+    <button
+      className={`sidebar-nav-item${isActive ? " active" : ""}`}
+      onClick={() => navigate(to)}
+    >
+      <Icon size={17} />
+      {label}
+    </button>
   );
-};
+}
 
-export default Sidebar;
+export default function Sidebar() {
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  return (
+    <Box
+      position="fixed"
+      left={0}
+      top={0}
+      h="100vh"
+      w="260px"
+      display="flex"
+      flexDirection="column"
+      zIndex={100}
+      style={{
+        background: "#0d1f35",
+        borderRight: "1px solid rgba(212,160,23,0.12)",
+      }}
+    >
+      {/* Brand */}
+      <Box
+        px={5}
+        py={5}
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <Flex align="center" gap={3}>
+          <Box
+            w="38px"
+            h="38px"
+            borderRadius="11px"
+            flexShrink={0}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            style={{
+              background: "linear-gradient(135deg, #d4a017, #92700f)",
+              boxShadow: "0 0 16px rgba(212,160,23,0.3)",
+            }}
+          >
+            <RiBankLine size={19} color="#0d1f35" />
+          </Box>
+          <Box>
+            <Text
+              fontWeight="700"
+              fontSize="md"
+              color="white"
+              letterSpacing="-0.2px"
+            >
+              LoanMgmt
+            </Text>
+            <Text
+              fontSize="11px"
+              color="rgba(212,160,23,0.6)"
+              letterSpacing="0.8px"
+              textTransform="uppercase"
+            >
+              {user?.role?.replace("_", " ")}
+            </Text>
+          </Box>
+        </Flex>
+      </Box>
+
+      {/* Nav items */}
+      <Box
+        flex={1}
+        py={3}
+        px={3}
+        overflowY="auto"
+        display="flex"
+        flexDirection="column"
+        gap="2px"
+      >
+        <Text
+          fontSize="10px"
+          fontWeight="700"
+          letterSpacing="1px"
+          textTransform="uppercase"
+          px={3}
+          pt={1}
+          pb={2}
+          style={{ color: "rgba(226,232,240,0.25)" }}
+        >
+          Menu
+        </Text>
+        {NAV_ITEMS.map(item => (
+          <NavItem key={item.to} {...item} />
+        ))}
+      </Box>
+
+      {/* User + Logout */}
+      <Box
+        px={3}
+        py={3}
+        style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <Box
+          px={3}
+          py={3}
+          mb={1}
+          borderRadius="10px"
+          style={{ background: "rgba(255,255,255,0.04)" }}
+        >
+          <Text fontSize="sm" fontWeight="600" color="white" noOfLines={1}>
+            {user?.name}
+          </Text>
+          <Text
+            fontSize="12px"
+            noOfLines={1}
+            style={{ color: "rgba(226,232,240,0.4)" }}
+          >
+            {user?.email || user?.mobile}
+          </Text>
+        </Box>
+        <button
+          className="sidebar-nav-item"
+          onClick={() => {
+            logout();
+            navigate("/");
+          }}
+          style={{ color: "rgba(248,113,113,0.75)" }}
+        >
+          <RiLogoutBoxLine size={17} />
+          Logout
+        </button>
+      </Box>
+    </Box>
+  );
+}

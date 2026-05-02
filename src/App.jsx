@@ -4,73 +4,42 @@ import { Provider as JotaiProvider } from "jotai";
 import { Provider as ChakraProvider } from "@/components/ui/provider";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
+import Layout from "./components/Layout";
 import Login from "./pages/Login";
-import OnboardSalesRep from "./pages/OnboardSalesRep";
-import AddDoctor from "./pages/AddDoctor";
-import AssignDoctor from "./pages/AssignDoctor";
-import Audit from "./pages/Audit";
-import AssignmentManagement from "./pages/AssignmentManagement";
+import Dashboard from "./pages/Dashboard";
+import Customers from "./pages/Customers";
+import Cashiers from "./pages/Cashiers";
+import Loans from "./pages/Loans";
+import Collections from "./pages/Collections";
+import Approvals from "./pages/Approvals";
+import Reports from "./pages/Reports";
+import CashBox from "./pages/CashBox";
+import Notifications from "./pages/Notifications";
+
+const guarded = element => (
+  <ProtectedRoute>
+    <Layout>{element}</Layout>
+  </ProtectedRoute>
+);
 
 export default function App() {
   return (
     <JotaiProvider>
-      <ChakraProvider>
+      <ChakraProvider defaultTheme="dark">
         <AuthProvider>
-          <Navbar />
           <Toaster />
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/onboard-sales-rep"
-              element={
-                <ProtectedRoute>
-                  <OnboardSalesRep />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/add-doctor"
-              element={
-                <ProtectedRoute>
-                  <AddDoctor />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/assign-doctor"
-              element={
-                <ProtectedRoute>
-                  <AssignDoctor />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/audit"
-              element={
-                <ProtectedRoute>
-                  <Audit />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/assignments"
-              element={
-                <ProtectedRoute>
-                  <AssignmentManagement />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/home" element={guarded(<Dashboard />)} />
+            <Route path="/customers" element={guarded(<Customers />)} />
+            <Route path="/cashiers" element={guarded(<Cashiers />)} />
+            <Route path="/loans" element={guarded(<Loans />)} />
+            <Route path="/collections" element={guarded(<Collections />)} />
+            <Route path="/cash-box" element={guarded(<CashBox />)} />
+            <Route path="/approvals" element={guarded(<Approvals />)} />
+            <Route path="/reports" element={guarded(<Reports />)} />
+            <Route path="/notifications" element={guarded(<Notifications />)} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
