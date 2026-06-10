@@ -17,6 +17,7 @@ import {
   RiUserStarLine,
   RiUserAddLine,
   RiLockPasswordLine,
+  RiStoreLine,
 } from "react-icons/ri";
 import { apiFetch } from "../config/api";
 import { usePermission } from "../hooks/usePermission";
@@ -157,6 +158,23 @@ function CashierRow({ cashier, selected, onClick }) {
           <span style={{ color: "rgba(226,232,240,0.45)", fontSize: 12 }}>
             {cashier.userMobile ?? "—"}
           </span>
+          {cashier.shopName && (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                color: "rgba(226,232,240,0.35)",
+                fontSize: 12,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <RiStoreLine size={11} color="rgba(212,160,23,0.5)" />
+              {cashier.shopName}
+            </span>
+          )}
           {cashier.userEmail && (
             <span
               style={{
@@ -379,6 +397,12 @@ function DetailPanel({
       {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
         <SectionLabel>User Info</SectionLabel>
+        <InfoRow
+          icon={RiStoreLine}
+          label="Shop Name"
+          value={cashier.shopName}
+          accent="#d4a017"
+        />
         <InfoRow
           icon={RiPhoneLine}
           label="Mobile"
@@ -643,6 +667,7 @@ function CreateCashierModal({ onClose, onCreate }) {
     name: "",
     mobile: "",
     email: "",
+    shopName: "",
     password: "",
   });
   const [errors, setErrors] = useState({});
@@ -671,8 +696,8 @@ function CreateCashierModal({ onClose, onCreate }) {
         name: form.name.trim(),
         mobile: form.mobile.trim(),
         email: form.email.trim() || undefined,
+        shopName: form.shopName.trim() || undefined,
         password: form.password,
-        role: "CASHIER",
       });
     } finally {
       setLoading(false);
@@ -804,6 +829,19 @@ function CreateCashierModal({ onClose, onCreate }) {
               placeholder="e.g. ravi@example.com"
               value={form.email}
               onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+            />
+          </FormField>
+
+          <FormField
+            label="Shop Name (optional)"
+            icon={RiStoreLine}
+            error={errors.shopName}
+          >
+            <input
+              style={inputStyle}
+              placeholder="e.g. Ravi Provision Store"
+              value={form.shopName}
+              onChange={e => setForm(p => ({ ...p, shopName: e.target.value }))}
             />
           </FormField>
 
@@ -975,9 +1013,14 @@ export default function Cashiers() {
 
   const handleCreate = async payload => {
     try {
-      await apiFetch("/api/users", {
+      await apiFetch("/api/cashiers", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          userName: payload.name,
+          userMobile: payload.mobile,
+          userEmail: payload.email || undefined,
+          shopName: payload.shopName || undefined,
+        }),
       });
       toaster.create({
         title: "Cashier created — pending approval",
