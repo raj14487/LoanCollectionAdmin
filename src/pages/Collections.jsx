@@ -265,10 +265,33 @@ function CollectionRow({
           </span>
           <StatusBadge verified={verified} />
         </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
           <span style={{ fontSize: 13, color: "#f59e0b", fontWeight: 700 }}>
             {fmt(collection.amount)}
           </span>
+          {collection.installmentNumber != null && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                padding: "2px 7px",
+                borderRadius: 10,
+                background: "rgba(16,185,129,0.1)",
+                border: "1px solid rgba(16,185,129,0.2)",
+                color: "#10b981",
+                flexShrink: 0,
+              }}
+            >
+              Day {collection.installmentNumber}
+            </span>
+          )}
           <span style={{ fontSize: 11, color: "rgba(226,232,240,0.3)" }}>
             {fmtDate(collection.collectedAt)}
           </span>
@@ -703,6 +726,16 @@ function DetailPanel({
                 collection.collectionMode.slice(1).toLowerCase()
               : null
           }
+        />
+        <InfoRow
+          icon={RiCalendarLine}
+          label="Installment Number"
+          value={
+            collection.installmentNumber != null
+              ? `Day ${collection.installmentNumber}`
+              : null
+          }
+          valueColor="#10b981"
         />
         <InfoRow
           icon={RiIdCardLine}

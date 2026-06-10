@@ -14,6 +14,8 @@ import {
   RiTimeLine,
   RiPercentLine,
   RiArrowDownLine,
+  RiRepeatLine,
+  RiUserStarLine,
 } from "react-icons/ri";
 import { apiFetch } from "../config/api";
 import { usePermission } from "../hooks/usePermission";
@@ -84,12 +86,16 @@ function StatusBadge({ status }) {
   );
 }
 
-function RepaymentBar({ loan }) {
-  const paid = Number(loan.loanAmount) - Number(loan.outstandingAmount);
-  const pct =
-    loan.loanAmount > 0
-      ? Math.min(100, Math.max(0, (paid / Number(loan.loanAmount)) * 100))
-      : 0;
+function InstallmentBar({ loan }) {
+  const hasDays =
+    loan.totalInstallmentDays != null && loan.totalInstallmentDays > 0;
+  const paid = hasDays
+    ? (loan.installmentsPaid ?? 0)
+    : Number(loan.loanAmount) - Number(loan.outstandingAmount);
+  const total = hasDays ? loan.totalInstallmentDays : Number(loan.loanAmount);
+  const pct = total > 0 ? Math.min(100, Math.max(0, (paid / total) * 100)) : 0;
+  const remaining = hasDays ? (loan.remainingInstallments ?? 0) : null;
+
   return (
     <div style={{ width: "100%" }}>
       <div
@@ -100,10 +106,18 @@ function RepaymentBar({ loan }) {
         }}
       >
         <span style={{ fontSize: 11, color: "rgba(226,232,240,0.4)" }}>
-          Repaid {pct.toFixed(0)}%
+          {hasDays
+            ? `Day ${loan.installmentsPaid ?? 0} of ${loan.totalInstallmentDays}`
+            : `Repaid ${pct.toFixed(0)}%`}
         </span>
         <span style={{ fontSize: 11, color: "#10b981" }}>
-          Outstanding: {fmt(loan.outstandingAmount)}
+          {hasDays && remaining != null
+            ? remaining > 0
+              ? `${remaining} days left`
+              : loan.status === "CLOSED"
+                ? "Complete"
+                : "Done"
+            : `Outstanding: ${fmt(loan.outstandingAmount)}`}
         </span>
       </div>
       <div
@@ -193,6 +207,7 @@ function LoanRow({ loan, selected, onClick }) {
             gap: 16,
             marginBottom: 6,
             flexWrap: "wrap",
+            alignItems: "center",
           }}
         >
           <span style={{ fontSize: 12, color: "rgba(226,232,240,0.45)" }}>
@@ -201,14 +216,50 @@ function LoanRow({ loan, selected, onClick }) {
               {fmt(loan.loanAmount)}
             </span>
           </span>
-          <span style={{ fontSize: 12, color: "rgba(226,232,240,0.45)" }}>
-            Principal:{" "}
-            <span style={{ color: "rgba(226,232,240,0.65)" }}>
-              {fmt(loan.principalAmount)}
+          {loan.dailyInstallmentAmount != null ? (
+            <span style={{ fontSize: 12, color: "#10b981", fontWeight: 600 }}>
+              {fmt(loan.dailyInstallmentAmount)}/
+              {loan.collectionFrequency === "WEEKLY" ? "wk" : "day"}
+              {loan.totalInstallmentDays
+                ? ` · ${loan.totalInstallmentDays} days`
+                : ""}
             </span>
-          </span>
+          ) : (
+            <span style={{ fontSize: 12, color: "rgba(226,232,240,0.45)" }}>
+              Principal:{" "}
+              <span style={{ color: "rgba(226,232,240,0.65)" }}>
+                {fmt(loan.principalAmount)}
+              </span>
+            </span>
+          )}
+          {loan.collectionFrequency === "WEEKLY" && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                padding: "1px 7px",
+                borderRadius: 10,
+                background: "rgba(167,139,250,0.1)",
+                border: "1px solid rgba(167,139,250,0.25)",
+                color: "#a78bfa",
+              }}
+            >
+              WEEKLY
+            </span>
+          )}
         </div>
-        <RepaymentBar loan={loan} />
+        {loan.assignedCashierName && (
+          <div
+            style={{
+              fontSize: 11,
+              color: "rgba(226,232,240,0.3)",
+              marginBottom: 4,
+            }}
+          >
+            Cashier: {loan.assignedCashierName}
+          </div>
+        )}
+        <InstallmentBar loan={loan} />
       </div>
 
       {/* Date + arrow */}
@@ -320,10 +371,16 @@ function DetailPanel({
   canApproveSettle,
   canDelete,
 }) {
-  const paid = Number(loan.loanAmount) - Number(loan.outstandingAmount);
-  const pct =
-    loan.loanAmount > 0
-      ? Math.min(100, (paid / Number(loan.loanAmount)) * 100)
+  const hasDays =
+    loan.totalInstallmentDays != null && loan.totalInstallmentDays > 0;
+  const paidAmt = Number(loan.loanAmount) - Number(loan.outstandingAmount);
+  const pct = hasDays
+    ? Math.min(
+        100,
+        ((loan.installmentsPaid ?? 0) / loan.totalInstallmentDays) * 100
+      )
+    : loan.loanAmount > 0
+      ? Math.min(100, (paidAmt / Number(loan.loanAmount)) * 100)
       : 0;
   const isActive = loan.status === "ACTIVE";
 
@@ -485,12 +542,68 @@ function DetailPanel({
           </div>
           <div
             style={{
-              fontSize: 12,
-              color: "rgba(226,232,240,0.45)",
-              textAlign: "center",
+              display: "flex",
+              justifyContent: "space-around",
+              flexWrap: "wrap",
+              gap: 8,
             }}
           >
-            {fmt(paid)} repaid · {pct.toFixed(1)}% complete
+            {hasDays ? (
+              <>
+                <div style={{ textAlign: "center" }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(226,232,240,0.35)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    Daily
+                  </div>
+                  <div
+                    style={{ fontSize: 14, fontWeight: 700, color: "#10b981" }}
+                  >
+                    {fmt(loan.dailyInstallmentAmount)}
+                  </div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(226,232,240,0.35)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    Paid
+                  </div>
+                  <div
+                    style={{ fontSize: 14, fontWeight: 700, color: "white" }}
+                  >
+                    Day {loan.installmentsPaid ?? 0}/{loan.totalInstallmentDays}
+                  </div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(226,232,240,0.35)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    Remaining
+                  </div>
+                  <div
+                    style={{ fontSize: 14, fontWeight: 700, color: "#f59e0b" }}
+                  >
+                    {loan.remainingInstallments ?? 0} days
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 12, color: "rgba(226,232,240,0.45)" }}>
+                {fmt(paidAmt)} repaid · {pct.toFixed(1)}% complete
+              </div>
+            )}
           </div>
         </div>
 
@@ -513,6 +626,75 @@ function DetailPanel({
             value={fmt(loan.discount)}
             valueColor="#f59e0b"
           />
+        )}
+
+        {hasDays && (
+          <>
+            <Divider />
+            <SectionLabel>Collection Schedule</SectionLabel>
+            <InfoRow
+              icon={RiMoneyDollarBoxLine}
+              label="Daily Installment"
+              value={fmt(loan.dailyInstallmentAmount)}
+              valueColor="#10b981"
+            />
+            <InfoRow
+              icon={RiRepeatLine}
+              label="Frequency"
+              value={loan.collectionFrequency === "WEEKLY" ? "Weekly" : "Daily"}
+              valueColor={
+                loan.collectionFrequency === "WEEKLY" ? "#a78bfa" : undefined
+              }
+            />
+            <InfoRow
+              icon={RiTimeLine}
+              label="Total Days"
+              value={
+                loan.totalInstallmentDays
+                  ? `${loan.totalInstallmentDays} days`
+                  : null
+              }
+            />
+            <InfoRow
+              icon={RiCheckLine}
+              label="Days Paid"
+              value={
+                loan.installmentsPaid != null
+                  ? `Day ${loan.installmentsPaid}`
+                  : null
+              }
+              valueColor="#10b981"
+            />
+            <InfoRow
+              icon={RiArrowRightLine}
+              label="Days Remaining"
+              value={
+                loan.remainingInstallments != null
+                  ? `${loan.remainingInstallments} days`
+                  : null
+              }
+            />
+            <InfoRow
+              icon={RiCalendarLine}
+              label="Collection Started"
+              value={fmtDate(loan.collectionStartDate)}
+            />
+            {loan.processingFee != null && Number(loan.processingFee) > 0 && (
+              <InfoRow
+                icon={RiPercentLine}
+                label="Processing Fee"
+                value={fmt(loan.processingFee)}
+                valueColor="#a78bfa"
+              />
+            )}
+            {loan.assignedCashierName && (
+              <InfoRow
+                icon={RiUserStarLine}
+                label="Assigned Cashier"
+                value={loan.assignedCashierName}
+              />
+            )}
+          </>
         )}
 
         <Divider />
@@ -678,15 +860,22 @@ function DetailPanel({
 const EMPTY_FORM = {
   customerId: "",
   principalAmount: "",
+  dailyInstallmentAmount: "",
+  totalInstallmentDays: "",
   loanAmount: "",
+  collectionStartDate: "",
   disbursalDate: "",
   tentativeSettlementDate: "",
   discount: "",
+  collectionFrequency: "DAILY",
+  processingFee: "",
+  assignedCashierId: "",
 };
 
 function CreateLoanModal({ onClose, onCreated }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [customers, setCustomers] = useState([]);
+  const [cashiers, setCashiers] = useState([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -696,9 +885,39 @@ function CreateLoanModal({ onClose, onCreated }) {
       .then(data => setCustomers(Array.isArray(data) ? data : []))
       .catch(() => setCustomers([]))
       .finally(() => setLoadingCustomers(false));
+    apiFetch("/api/cashiers")
+      .then(data => setCashiers(Array.isArray(data) ? data : []))
+      .catch(() => setCashiers([]));
   }, []);
 
-  const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const set = (field, value) =>
+    setForm(prev => {
+      const next = { ...prev, [field]: value };
+      if (
+        field === "dailyInstallmentAmount" ||
+        field === "totalInstallmentDays"
+      ) {
+        const daily = Number(
+          field === "dailyInstallmentAmount"
+            ? value
+            : prev.dailyInstallmentAmount
+        );
+        const days = Number(
+          field === "totalInstallmentDays" ? value : prev.totalInstallmentDays
+        );
+        if (daily > 0 && days > 0) next.loanAmount = String(daily * days);
+      }
+      return next;
+    });
+
+  const computedRepayTotal =
+    form.dailyInstallmentAmount && form.totalInstallmentDays
+      ? Number(form.dailyInstallmentAmount) * Number(form.totalInstallmentDays)
+      : null;
+  const computedInterest =
+    computedRepayTotal && form.principalAmount
+      ? computedRepayTotal - Number(form.principalAmount)
+      : null;
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -720,11 +939,27 @@ function CreateLoanModal({ onClose, onCreated }) {
         customerId: form.customerId,
         principalAmount: Number(form.principalAmount),
         loanAmount: Number(form.loanAmount),
+        ...(form.dailyInstallmentAmount && {
+          dailyInstallmentAmount: Number(form.dailyInstallmentAmount),
+        }),
+        ...(form.totalInstallmentDays && {
+          totalInstallmentDays: Number(form.totalInstallmentDays),
+        }),
+        ...(form.collectionStartDate && {
+          collectionStartDate: form.collectionStartDate,
+        }),
         disbursalDate: form.disbursalDate,
         ...(form.tentativeSettlementDate && {
           tentativeSettlementDate: form.tentativeSettlementDate,
         }),
         ...(form.discount && { discount: Number(form.discount) }),
+        collectionFrequency: form.collectionFrequency || "DAILY",
+        ...(form.processingFee && {
+          processingFee: Number(form.processingFee),
+        }),
+        ...(form.assignedCashierId && {
+          assignedCashierId: form.assignedCashierId,
+        }),
       };
       const created = await apiFetch("/api/loans", {
         method: "POST",
@@ -880,7 +1115,7 @@ function CreateLoanModal({ onClose, onCreated }) {
           </div>
 
           {/* Amounts */}
-          <Grid templateColumns="1fr 1fr" gap={3} mb={4}>
+          <Grid templateColumns="1fr 1fr" gap={3} mb={3}>
             <div>
               <label style={labelStyle}>Principal Amount (₹) *</label>
               <input
@@ -902,15 +1137,154 @@ function CreateLoanModal({ onClose, onCreated }) {
                 step="0.01"
                 value={form.loanAmount}
                 onChange={e => set("loanAmount", e.target.value)}
-                placeholder="0.00"
+                placeholder="Auto-filled from below"
                 style={inputStyle}
                 required
               />
             </div>
           </Grid>
 
+          {/* Daily Finance */}
+          <Grid templateColumns="1fr 1fr" gap={3} mb={3}>
+            <div>
+              <label style={labelStyle}>Daily Installment (₹)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.dailyInstallmentAmount}
+                onChange={e => set("dailyInstallmentAmount", e.target.value)}
+                placeholder="e.g. 120"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Total Days</label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={form.totalInstallmentDays}
+                onChange={e => set("totalInstallmentDays", e.target.value)}
+                placeholder="e.g. 100"
+                style={inputStyle}
+              />
+            </div>
+          </Grid>
+
+          {/* Collection Frequency */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Collection Frequency</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {["DAILY", "WEEKLY"].map(freq => {
+                const active = form.collectionFrequency === freq;
+                return (
+                  <button
+                    key={freq}
+                    type="button"
+                    onClick={() => set("collectionFrequency", freq)}
+                    style={{
+                      flex: 1,
+                      padding: "8px",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      transition: "all 0.15s",
+                      background: active
+                        ? "rgba(16,185,129,0.12)"
+                        : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${active ? "rgba(16,185,129,0.4)" : "rgba(255,255,255,0.1)"}`,
+                      color: active ? "#10b981" : "rgba(226,232,240,0.45)",
+                    }}
+                  >
+                    {freq.charAt(0) + freq.slice(1).toLowerCase()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Processing Fee + Assigned Cashier */}
+          <Grid templateColumns="1fr 1fr" gap={3} mb={3}>
+            <div>
+              <label style={labelStyle}>Processing Fee (₹)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.processingFee}
+                onChange={e => set("processingFee", e.target.value)}
+                placeholder="0.00 (optional)"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Assigned Cashier</label>
+              <select
+                value={form.assignedCashierId}
+                onChange={e => set("assignedCashierId", e.target.value)}
+                style={{ ...inputStyle, appearance: "none" }}
+              >
+                <option value="" style={{ background: "#0d1f35" }}>
+                  None
+                </option>
+                {cashiers.map(c => (
+                  <option
+                    key={c.userId}
+                    value={c.userId}
+                    style={{ background: "#0d1f35" }}
+                  >
+                    {c.userName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </Grid>
+
+          {computedRepayTotal != null && (
+            <div
+              style={{
+                marginBottom: 12,
+                padding: "8px 12px",
+                borderRadius: 8,
+                fontSize: 12,
+                background: "rgba(16,185,129,0.07)",
+                border: "1px solid rgba(16,185,129,0.18)",
+                color: "rgba(226,232,240,0.65)",
+                display: "flex",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
+              <span>
+                Total repay:{" "}
+                <strong style={{ color: "#10b981" }}>
+                  {fmt(computedRepayTotal)}
+                </strong>
+              </span>
+              {computedInterest != null && computedInterest > 0 && (
+                <span>
+                  · Interest:{" "}
+                  <strong style={{ color: "#f59e0b" }}>
+                    {fmt(computedInterest)}
+                  </strong>
+                </span>
+              )}
+              {form.processingFee && Number(form.processingFee) > 0 && (
+                <span>
+                  · Fee:{" "}
+                  <strong style={{ color: "#a78bfa" }}>
+                    {fmt(Number(form.processingFee))}
+                  </strong>
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Dates */}
-          <Grid templateColumns="1fr 1fr" gap={3} mb={4}>
+          <Grid templateColumns="1fr 1fr" gap={3} mb={3}>
             <div>
               <label style={labelStyle}>Disbursal Date *</label>
               <input
@@ -922,6 +1296,17 @@ function CreateLoanModal({ onClose, onCreated }) {
               />
             </div>
             <div>
+              <label style={labelStyle}>Collection Start Date</label>
+              <input
+                type="date"
+                value={form.collectionStartDate}
+                onChange={e => set("collectionStartDate", e.target.value)}
+                style={{ ...inputStyle, colorScheme: "dark" }}
+              />
+            </div>
+          </Grid>
+          <Grid templateColumns="1fr 1fr" gap={3} mb={4}>
+            <div>
               <label style={labelStyle}>Tentative Settlement</label>
               <input
                 type="date"
@@ -930,21 +1315,19 @@ function CreateLoanModal({ onClose, onCreated }) {
                 style={{ ...inputStyle, colorScheme: "dark" }}
               />
             </div>
+            <div>
+              <label style={labelStyle}>Discount (₹)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.discount}
+                onChange={e => set("discount", e.target.value)}
+                placeholder="0.00 (optional)"
+                style={inputStyle}
+              />
+            </div>
           </Grid>
-
-          {/* Discount */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>Discount (₹)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.discount}
-              onChange={e => set("discount", e.target.value)}
-              placeholder="0.00 (optional)"
-              style={inputStyle}
-            />
-          </div>
 
           {error && (
             <div
@@ -1071,12 +1454,20 @@ export default function Loans() {
   };
 
   // Summary stats
-  const totalOutstanding = loans
-    .filter(l => l.status === "ACTIVE")
-    .reduce((sum, l) => sum + Number(l.outstandingAmount ?? 0), 0);
-  const totalDisbursed = loans
-    .filter(l => l.status === "ACTIVE")
-    .reduce((sum, l) => sum + Number(l.loanAmount ?? 0), 0);
+  const activeLoans = loans.filter(l => l.status === "ACTIVE");
+  const totalOutstanding = activeLoans.reduce(
+    (sum, l) => sum + Number(l.outstandingAmount ?? 0),
+    0
+  );
+  const totalDisbursed = activeLoans.reduce(
+    (sum, l) => sum + Number(l.loanAmount ?? 0),
+    0
+  );
+  const dailyTarget = activeLoans.reduce(
+    (sum, l) => sum + Number(l.dailyInstallmentAmount ?? 0),
+    0
+  );
+  const behindToday = activeLoans.filter(l => l.overdueToday === true).length;
 
   const handleSettle = async id => {
     setActionLoading(true);
@@ -1206,7 +1597,7 @@ export default function Loans() {
           transition={{ delay: 0.06 }}
         >
           <Grid
-            templateColumns={{ base: "1fr", sm: "repeat(2,1fr)" }}
+            templateColumns={{ base: "1fr 1fr", sm: "repeat(4,1fr)" }}
             gap={4}
             mb={5}
           >
@@ -1220,6 +1611,16 @@ export default function Loans() {
                 label: "Total Outstanding",
                 value: fmt(totalOutstanding),
                 color: "#f59e0b",
+              },
+              {
+                label: "Daily Collection Target",
+                value: fmt(dailyTarget),
+                color: "#06b6d4",
+              },
+              {
+                label: "Behind Today",
+                value: String(behindToday),
+                color: behindToday > 0 ? "#ef4444" : "#94a3b8",
               },
             ].map(stat => (
               <div

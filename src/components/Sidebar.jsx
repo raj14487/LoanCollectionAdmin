@@ -13,6 +13,7 @@ import {
   RiBellLine,
   RiLogoutBoxLine,
   RiBankLine,
+  RiFileListLine,
 } from "react-icons/ri";
 
 const NAV_ITEMS = [
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { icon: RiUserLine, label: "Cashiers", to: "/cashiers" },
   { icon: RiMoneyDollarBoxLine, label: "Loans", to: "/loans" },
   { icon: RiHandCoinLine, label: "Collections", to: "/collections" },
+  { icon: RiFileListLine, label: "Today's Sheet", to: "/collection-sheet" },
   { icon: RiSafeLine, label: "Cash Box", to: "/cash-box" },
   { icon: RiCheckboxCircleLine, label: "Approvals", to: "/approvals" },
   { icon: RiBarChart2Line, label: "Reports", to: "/reports" },

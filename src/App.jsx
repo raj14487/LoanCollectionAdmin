@@ -15,6 +15,7 @@ import Approvals from "./pages/Approvals";
 import Reports from "./pages/Reports";
 import CashBox from "./pages/CashBox";
 import Notifications from "./pages/Notifications";
+import CollectionSheet from "./pages/CollectionSheet";
 
 const guarded = element => (
   <ProtectedRoute>
@@ -40,6 +41,10 @@ export default function App() {
             <Route path="/approvals" element={guarded(<Approvals />)} />
             <Route path="/reports" element={guarded(<Reports />)} />
             <Route path="/notifications" element={guarded(<Notifications />)} />
+            <Route
+              path="/collection-sheet"
+              element={guarded(<CollectionSheet />)}
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
