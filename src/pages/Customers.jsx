@@ -14,6 +14,8 @@ import {
   RiArrowRightLine,
   RiDeleteBinLine,
   RiIdCardLine,
+  RiStoreLine,
+  RiHashtag,
 } from "react-icons/ri";
 import { apiFetch } from "../config/api";
 import { toaster } from "../components/ui/toaster";
@@ -142,7 +144,30 @@ function CustomerRow({ customer, selected, onClick }) {
           </span>
           <StatusBadge status={customer.status} />
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          {customer.customerNumber && (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#d4a017",
+                background: "rgba(212,160,23,0.1)",
+                border: "1px solid rgba(212,160,23,0.2)",
+                borderRadius: 6,
+                padding: "1px 6px",
+                letterSpacing: "0.5px",
+              }}
+            >
+              {customer.customerNumber}
+            </span>
+          )}
           <span style={{ color: "rgba(226,232,240,0.45)", fontSize: 12 }}>
             {customer.mobile ?? "—"}
           </span>
@@ -335,12 +360,37 @@ function DetailPanel({
                 color: "white",
                 fontWeight: 700,
                 fontSize: 15,
-                marginBottom: 5,
+                marginBottom: 4,
               }}
             >
               {customer.name}
             </div>
-            <StatusBadge status={customer.status} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                flexWrap: "wrap",
+              }}
+            >
+              {customer.customerNumber && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#d4a017",
+                    background: "rgba(212,160,23,0.12)",
+                    border: "1px solid rgba(212,160,23,0.25)",
+                    borderRadius: 6,
+                    padding: "2px 7px",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {customer.customerNumber}
+                </span>
+              )}
+              <StatusBadge status={customer.status} />
+            </div>
           </div>
         </div>
         <button
@@ -366,6 +416,16 @@ function DetailPanel({
       {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
         <SectionLabel>Customer Info</SectionLabel>
+        <InfoRow
+          icon={RiHashtag}
+          label="Customer Number"
+          value={customer.customerNumber}
+        />
+        <InfoRow
+          icon={RiStoreLine}
+          label="Shop Name"
+          value={customer.shopName}
+        />
         <InfoRow icon={RiPhoneLine} label="Mobile" value={customer.mobile} />
         <InfoRow icon={RiMapPinLine} label="Address" value={customer.address} />
         <InfoRow
