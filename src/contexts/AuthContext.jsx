@@ -1,39 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AuthContext } from "../hooks/useAuth";
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is logged in on initial load
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      // eslint-disable-next-line
-      setUser(JSON.parse(storedUser));
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem("auth_user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
+      return null;
     }
-    setLoading(false);
-  }, []);
+  });
+  const [loading] = useState(false);
 
   const login = userData => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("auth_user", JSON.stringify(userData));
+    localStorage.setItem("auth_token", userData.token);
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    isAuthenticated: !!user,
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("auth_token");
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{ user, login, logout, isAuthenticated: !!user }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );

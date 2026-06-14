@@ -1,0 +1,196 @@
+Postman Setup
+Base URL variable: Set {{baseUrl}} = http://localhost:8080
+
+Auth: After login, copy the token and set {{token}} as a collection variable. For all protected requests, add header:
+Authorization: Bearer {{token}}
+
+1. Auth
+POST {{baseUrl}}/api/auth/login
+
+{
+  "username": "9876543210",
+  "password": "yourpassword"
+}
+
+Copy
+json
+Save the token from the response.
+
+2. Users (SUPER_ADMIN only for POST/PUT/DELETE)
+Method	URL	Notes
+GET	/api/users	All users
+GET	/api/users/{id}	By UUID
+GET	/api/users/role/ADMIN	By role
+POST	/api/users	Body below
+PUT	/api/users/{id}	Same body
+DELETE	/api/users/{id}	No body
+POST body:
+
+{
+  "name": "John Doe",
+  "mobile": "9876543210",
+  "email": "john@example.com",
+  "password": "pass123",
+  "role": "ADMIN"
+}
+
+Copy
+json
+3. Cashiers
+Method	URL	Notes
+GET	/api/cashiers
+GET	/api/cashiers/{id}
+POST	/api/cashiers	Body below
+PUT	/api/cashiers/{id}	Same body
+PUT	/api/cashiers/{id}/approve	No body, SUPER_ADMIN
+DELETE	/api/cashiers/{id}
+POST body:
+
+{
+  "userId": "uuid-of-existing-user",
+  "address": "123 Main St",
+  "aadhaarNumber": "1234-5678-9012",
+  "guarantorName": "Jane Doe",
+  "guarantorMobile": "9876543211",
+  "guarantorAddress": "456 Side St",
+  "guarantorAadhaarNumber": "9876-5432-1098"
+}
+
+Copy
+json
+4. Customers
+Method	URL	Notes
+GET	/api/customers	Optional ?status=PENDING
+GET	/api/customers/{id}
+POST	/api/customers	Body below
+PUT	/api/customers/{id}	Same body
+PUT	/api/customers/{id}/approve	No body
+PUT	/api/customers/{id}/reject	{"reason": "..."}
+DELETE	/api/customers/{id}
+POST body:
+
+{
+  "name": "Customer Name",
+  "mobile": "9876543210",
+  "address": "Customer Address",
+  "latitude": 12.9716,
+  "longitude": 77.5946,
+  "aadhaarNumber": "1234-5678-9012",
+  "guarantorName": "Guarantor Name",
+  "guarantorMobile": "9876543211",
+  "guarantorAddress": "Guarantor Address"
+}
+
+Copy
+json
+5. Loans
+Method	URL	Notes
+GET	/api/loans	SUPER_ADMIN/ADMIN
+GET	/api/loans/{id}
+GET	/api/loans/customer/{customerId}
+POST	/api/loans	Body below
+PUT	/api/loans/{id}	Same body
+PUT	/api/loans/{id}/settle	No body
+PUT	/api/loans/{id}/settle/approve	No body, SUPER_ADMIN
+DELETE	/api/loans/{id}	SUPER_ADMIN
+POST body:
+
+{
+  "customerId": "uuid-of-customer",
+  "principalAmount": 10000.00,
+  "loanAmount": 12000.00,
+  "disbursalDate": "2025-01-01",
+  "tentativeSettlementDate": "2025-07-01"
+}
+
+Copy
+json
+6. Collections
+Method	URL	Notes
+GET	/api/collections
+GET	/api/collections/{id}
+GET	/api/collections/customer/{customerId}
+GET	/api/collections/cashier/{cashierId}
+GET	/api/collections/pending-verification
+POST	/api/collections	Body below
+PUT	/api/collections/{id}/verify	No body
+DELETE	/api/collections/{id}	SUPER_ADMIN
+POST body:
+
+{
+  "customerId": "uuid",
+  "loanId": "uuid",
+  "cashierId": "uuid",
+  "amount": 500.00,
+  "collectionMode": "CASH",
+  "status": "COLLECTED",
+  "notes": "Monthly collection",
+  "latitude": 12.9716,
+  "longitude": 77.5946,
+  "collectedAt": "2025-01-15T10:00:00"
+}
+
+Copy
+json
+7. Visits
+Method	URL
+GET	/api/visits/customer/{customerId}
+GET	/api/visits/cashier/{cashierId}
+8. Cash Box
+Method	URL	Notes
+GET	/api/cashbox/today
+GET	/api/cashbox?start=2025-01-01&end=2025-01-31	Date range
+POST	/api/cashbox	Body below
+PUT	/api/cashbox/{id}	Same body
+POST body:
+
+{
+  "adminId": "uuid",
+  "date": "2025-01-15",
+  "openingBalance": 5000.00,
+  "closingBalance": 8500.00
+}
+
+Copy
+json
+9. Cash Transactions
+Method	URL	Notes
+GET	/api/cash-transactions	Optional ?start=2025-01-01&end=2025-01-31
+GET	/api/cash-transactions/cashier/{cashierId}
+POST	/api/cash-transactions	Body below
+POST body:
+
+{
+  "cashierId": "uuid",
+  "loanId": "uuid",
+  "type": "CREDIT",
+  "amount": 1000.00,
+  "description": "Collection deposit"
+}
+
+Copy
+json
+10. Approval Requests
+Method	URL	Notes
+GET	/api/approval-requests	Pending only
+GET	/api/approval-requests?all=true	All requests
+PUT	/api/approval-requests/{id}/approve	No body
+PUT	/api/approval-requests/{id}/reject	{"reason": "..."}
+11. Notifications
+Method	URL
+GET	/api/notifications
+GET	/api/notifications/unread-count
+PUT	/api/notifications/{id}/read
+PUT	/api/notifications/read-all
+12. Reports
+Method	URL	Notes
+GET	/api/reports/daily	Optional ?date=2025-01-15
+GET	/api/reports/weekly	Optional ?weekStart=2025-01-13
+Tip: Create a Postman Collection with a "Login" request that has a test script to auto-save the token:
+
+// In Tests tab of login request
+pm.collectionVariables.set("token", pm.response.json().token);
+
+Copy
+js
+This way every subsequent request automatically uses the latest token

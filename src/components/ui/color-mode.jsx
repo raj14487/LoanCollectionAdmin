@@ -12,7 +12,6 @@ export function ColorModeProvider(props) {
   );
 }
 
-// eslint-disable-next-line
 export function useColorMode() {
   const { resolvedTheme, setTheme, forcedTheme } = useTheme();
   const colorMode = forcedTheme || resolvedTheme;
@@ -26,7 +25,6 @@ export function useColorMode() {
   };
 }
 
-// eslint-disable-next-line
 export function useColorModeValue(light, dark) {
   const { colorMode } = useColorMode();
   return colorMode === "dark" ? dark : light;

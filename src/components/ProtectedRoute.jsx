@@ -3,17 +3,18 @@ import { useAuth } from "../hooks/useAuth";
 import { useEffect } from "react";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const isCashier = user?.role === "CASHIER";
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isCashier) {
       navigate("/");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isCashier, navigate]);
 
-  if (!isAuthenticated) {
-    return null; // We could render a loading component here if desired
+  if (!isAuthenticated || isCashier) {
+    return null;
   }
 
   return children;
